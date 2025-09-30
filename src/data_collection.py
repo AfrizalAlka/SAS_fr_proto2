@@ -25,6 +25,8 @@ def collect_student_data(student_name, num_photos=50):
                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv2.putText(frame, f"Student: {student_name}", (10, 70), 
                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, "Press 'SPACE' to capture photo, 'ESC' to exit", (10, 470), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         cv2.imshow('Data Collection', frame)
         
         key = cv2.waitKey(1) & 0xFF
