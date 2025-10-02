@@ -52,20 +52,20 @@ Desktop.ini
 # Face Recognition Project Specific
 # =================================
 
-# # Student photos (data sensitif)
-# data/student/
+# Student photos (data sensitif)
+data/student/
 
-# # Attendance logs (data absensi)
-# data/attendance_logs/
+# Attendance logs (data absensi)
+data/attendance_logs/
 
-# # Training data (file besar)
-# data/training_data/
+# Training data (file besar)
+data/training_data/
 
-# # Model files (file besar)
-# data/models/
-# *.h5
-# *.pkl
-# *.npy
+# Model files (file besar)
+data/models/
+*.h5
+*.pkl
+*.npy
 
 # Temporary files
 temp/
@@ -85,7 +85,7 @@ secrets.json
 *.mp4
 *.mov
 *.wmv
-# *.jpg
+*.jpg
 *.jpeg
 *.png
 *.bmp
