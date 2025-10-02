@@ -1,8 +1,8 @@
-from sklearn.calibration import LabelEncoder
+from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow import Sequential
-from tensorflow import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from tensorflow import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pickle
@@ -61,9 +61,12 @@ def train_model():
     # Save model
     model.save('data/models/face_recognition_model.h5')
 
-    # Save label encoder
+    # Load and save the fitted label encoder
+    with open('data/models/label_encoder.pkl', 'rb') as f:
+        label_encoder = pickle.load(f)
+    
     with open('data/models/label_encoder.pkl', 'wb') as f:
-        pickle.dump(LabelEncoder(), f)
+        pickle.dump(label_encoder, f)
 
     print("Model saved successfully!")
 

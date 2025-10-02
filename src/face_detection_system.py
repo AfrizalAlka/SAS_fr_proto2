@@ -15,7 +15,7 @@ class FaceRecognitionSystem:
             cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
         )
         
-        self.img_size = (128, 128)
+        self.img_size = (160, 160)
         self.confidence_threshold = 0.7
     
     def preprocess_face(self, face_img):

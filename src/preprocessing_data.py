@@ -2,9 +2,9 @@ import os
 import pickle
 import cv2
 import numpy as np
-from sklearn.calibration import LabelEncoder
+from sklearn.preprocessing import LabelEncoder
 
-def preprocess_images(data_dir="data/students", img_size=(160, 160)):
+def preprocess_images(data_dir="data/student", img_size=(160, 160)):
     
     images = []
     labels = []
@@ -15,7 +15,7 @@ def preprocess_images(data_dir="data/students", img_size=(160, 160)):
         if not os.path.isdir(student_path):
             continue
 
-        student_name.append(student_name)
+        student_names.append(student_name)
 
         for img_file in os.listdir(student_path):
             if img_file.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -26,25 +26,25 @@ def preprocess_images(data_dir="data/students", img_size=(160, 160)):
                 img = cv2.resize(img, img_size)
                 img = img.astype('float32') / 255.0
 
-                images.append((img, student_name))
+                images.append(img)
                 labels.append(student_name)
 
-    x = np.array(images)
+    X = np.array(images)
     y = np.array(labels)
 
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(y)
 
-    with open('data/label_mapping.pkl', 'wb') as f:
+    with open('data/models/label_encoder.pkl', 'wb') as f:
         pickle.dump(label_encoder, f)
 
-    np.save('data/training_data/X_train.npy', x)
+    np.save('data/training_data/X_train.npy', X)
     np.save('data/training_data/y_train.npy', y_encoded)
 
-    print(f"Preprocessed {len(x)} images from {len(student_names)} students.")
-    print(f"Students names: {list(label_encoder.classes_)}")
+    print(f"Preprocessed {len(X)} images from {len(student_names)} student.")
+    print(f"Student names: {list(label_encoder.classes_)}")
 
-    return x, y_encoded, label_encoder
+    return X, y_encoded, label_encoder
 
 if __name__ == "__main__":
     preprocess_images()

@@ -8,7 +8,7 @@ from src.data_collection import collect_student_data
 
 def main():
     print("=== Face Recognition Attendance System ===")
-    print("1. Collect Employee Data")
+    print("1. Collect Student Data")
     print("2. Preprocess Data")
     print("3. Train Model")
     print("4. Run Attendance System")

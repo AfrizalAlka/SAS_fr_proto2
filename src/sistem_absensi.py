@@ -2,12 +2,12 @@ import cv2
 import pandas as pd
 from datetime import date, datetime
 import os
-from face_detection_system import FaceRecognitionSystem
+from .face_detection_system import FaceRecognitionSystem
 
 class AttendanceSystem:
     def __init__(self):
         self.face_system = FaceRecognitionSystem()
-        self.attendance_file = f"data/attendance/attendance_{date.today().strftime('%d_%m_%Y')}.xlsx"
+        self.attendance_file = f"data/attendance_logs/attendance_{date.today().strftime('%d_%m_%Y')}.xlsx"
         self.last_recorded = {}
         self.min_interval = 1  # menit
 
@@ -22,7 +22,7 @@ class AttendanceSystem:
         self.last_recorded[student_name] = current_time
 
         attendance_data = {
-            'Student Name': [student_name],
+            'Student Name': student_name,
             'Date': current_time.strftime('%d-%m-%Y'),
             'Time': current_time.strftime('%H:%M:%S'),
             'Status': 'Present'
@@ -30,7 +30,7 @@ class AttendanceSystem:
 
         if os.path.exists(self.attendance_file):
             df = pd.read_excel(self.attendance_file)
-            df = pd.concat([df, pd.DataFrame(attendance_data)], ignore_index=True)
+            df = pd.concat([df, pd.DataFrame([attendance_data])], ignore_index=True)
         else:
             df = pd.DataFrame([attendance_data])
 
