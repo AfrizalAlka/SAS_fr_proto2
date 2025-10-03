@@ -53,7 +53,7 @@ Face Recognition Project Specific
 =================================
 
 # Student photos (data sensitif)
-data/student/
+data/students/
 
 # Attendance logs (data absensi)
 data/attendance_logs/
