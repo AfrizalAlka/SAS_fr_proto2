@@ -63,7 +63,8 @@ Sistem absensi otomatis menggunakan face recognition berbasis CNN (Convolutional
 7. **Exit** - Keluar program
 
 ## Branch Information
-- `main`: Versi original dengan Excel
+- `main`: Versi original lastest update
+- `excel-version`: Versi dengan Excel (branch ini)
 - `db-version`: Versi dengan MySQL database (branch ini)
 
 ## Kontributor
