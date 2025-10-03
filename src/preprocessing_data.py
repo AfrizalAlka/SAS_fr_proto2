@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
-def preprocess_images(data_dir="data/student", img_size=(160, 160)):
+def preprocess_images(data_dir="data/students", img_size=(160, 160)):
     
     images = []
     labels = []

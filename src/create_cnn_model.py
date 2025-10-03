@@ -1,8 +1,8 @@
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Sequential # type: ignore
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout # type: ignore
+from tensorflow.keras.optimizers import Adam # type: ignore
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pickle

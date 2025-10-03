@@ -9,21 +9,31 @@ class AttendanceSystem:
         self.face_system = FaceRecognitionSystem()
         self.attendance_file = f"data/attendance_logs/attendance_{date.today().strftime('%d_%m_%Y')}.xlsx"
         self.last_recorded = {}
-        self.min_interval = 1  # menit
+        self.min_interval = 30  # detik (untuk mencegah spam)
 
     def record_attendance(self, student_name):
         current_time = datetime.now()
+        current_date = current_time.strftime('%d-%m-%Y')
 
+        # Cek apakah sudah absen hari ini
+        if os.path.exists(self.attendance_file):
+            df = pd.read_excel(self.attendance_file)
+            # Filter berdasarkan nama dan tanggal hari ini
+            today_attendance = df[(df['Student Name'] == student_name) & (df['Date'] == current_date)]
+            if not today_attendance.empty:
+                return False, "Already attended today"
+        
+        # Cek interval waktu untuk mencegah spam
         if student_name in self.last_recorded:
             time_diff = (current_time - self.last_recorded[student_name]).total_seconds()
             if time_diff < self.min_interval:
-                return False, "Already recorded recently"
+                return False, "Too soon to record again"
             
         self.last_recorded[student_name] = current_time
 
         attendance_data = {
             'Student Name': student_name,
-            'Date': current_time.strftime('%d-%m-%Y'),
+            'Date': current_date,
             'Time': current_time.strftime('%H:%M:%S'),
             'Status': 'Present'
         }
@@ -59,8 +69,16 @@ class AttendanceSystem:
 
                     success, message = self.record_attendance(name)
 
-                    color = (0, 255, 0) if success else (0, 255, 255)
-                    status_text = "Recorded" if success else "Already Recorded"
+                    if success:
+                        color = (0, 255, 0)
+                        status_text = "Recorded"
+                    else:
+                        if "today" in message:
+                            color = (255, 165, 0)  # Orange untuk sudah absen hari ini
+                            status_text = "Already Attended Today"
+                        else:
+                            color = (0, 255, 255)  # Cyan untuk terlalu cepat
+                            status_text = "Too Soon"
 
                     cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
                     cv2.putText(frame, f"{name} - {status_text}",
