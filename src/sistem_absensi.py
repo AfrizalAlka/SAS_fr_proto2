@@ -3,63 +3,140 @@ import pandas as pd
 from datetime import date, datetime
 import os
 from .face_detection_system import FaceRecognitionSystem
+from .models import get_db_session, Attendance, init_database
+from sqlalchemy import and_
 
 class AttendanceSystem:
     def __init__(self):
         self.face_system = FaceRecognitionSystem()
         
-        # Buat folder attendance_logs jika belum ada
-        os.makedirs('data/attendance_logs', exist_ok=True)
+        # Initialize database
+        if not init_database():
+            print("Warning: Database initialization failed!")
         
-        self.attendance_file = f"data/attendance_logs/attendance_{date.today().strftime('%d_%m_%Y')}.xlsx"
         self.last_recorded = {}
         self.min_interval = 30  # detik (untuk mencegah spam)
 
     def record_attendance(self, student_name):
         current_time = datetime.now()
-        current_date = current_time.strftime('%d-%m-%Y')
-
-        # Pastikan folder attendance_logs ada
-        os.makedirs('data/attendance_logs', exist_ok=True)
-
-        # Cek apakah sudah absen hari ini
-        if os.path.exists(self.attendance_file):
-            try:
-                df = pd.read_excel(self.attendance_file)
-                # Filter berdasarkan nama dan tanggal hari ini
-                today_attendance = df[(df['Student Name'] == student_name) & (df['Date'] == current_date)]
-                if not today_attendance.empty:
-                    return False, "Already attended today"
-            except Exception as e:
-                print(f"Warning: Error reading attendance file: {e}")
-        
-        # Cek interval waktu untuk mencegah spam
-        if student_name in self.last_recorded:
-            time_diff = (current_time - self.last_recorded[student_name]).total_seconds()
-            if time_diff < self.min_interval:
-                return False, "Too soon to record again"
-            
-        self.last_recorded[student_name] = current_time
-
-        attendance_data = {
-            'Student Name': student_name,
-            'Date': current_date,
-            'Time': current_time.strftime('%H:%M:%S'),
-            'Status': 'Present'
-        }
+        current_date = current_time.date()
+        current_time_str = current_time.strftime('%H:%M:%S')
 
         try:
-            if os.path.exists(self.attendance_file):
-                df = pd.read_excel(self.attendance_file)
-                df = pd.concat([df, pd.DataFrame([attendance_data])], ignore_index=True)
-            else:
-                df = pd.DataFrame([attendance_data])
+            # Get database session
+            db = get_db_session()
+            
+            # Cek apakah sudah absen hari ini
+            existing_attendance = db.query(Attendance).filter(
+                and_(
+                    Attendance.student_name == student_name,
+                    Attendance.date == current_date
+                )
+            ).first()
+            
+            if existing_attendance:
+                db.close()
+                return False, "Already attended today"
+            
+            # Cek interval waktu untuk mencegah spam
+            if student_name in self.last_recorded:
+                time_diff = (current_time - self.last_recorded[student_name]).total_seconds()
+                if time_diff < self.min_interval:
+                    db.close()
+                    return False, "Too soon to record again"
+                
+            self.last_recorded[student_name] = current_time
 
-            df.to_excel(self.attendance_file, index=False)
+            # Simpan ke database
+            new_attendance = Attendance(
+                student_name=student_name,
+                date=current_date,
+                time=current_time_str,
+                status='Present'
+            )
+            
+            db.add(new_attendance)
+            db.commit()
+            db.close()
+            
             return True, "Attendance recorded successfully"
+            
         except Exception as e:
-            print(f"Error saving attendance: {e}")
+            print(f"Error saving attendance to database: {e}")
+            if 'db' in locals():
+                db.close()
             return False, "Failed to save attendance"
+    
+    def get_today_attendance(self):
+        """Get today's attendance records"""
+        try:
+            db = get_db_session()
+            today = date.today()
+            
+            records = db.query(Attendance).filter(Attendance.date == today).all()
+            db.close()
+            
+            return records
+        except Exception as e:
+            print(f"Error getting attendance records: {e}")
+            return []
+    
+    def get_attendance_by_date(self, target_date):
+        """Get attendance records by specific date"""
+        try:
+            db = get_db_session()
+            
+            records = db.query(Attendance).filter(Attendance.date == target_date).all()
+            db.close()
+            
+            return records
+        except Exception as e:
+            print(f"Error getting attendance records: {e}")
+            return []
+    
+    def export_to_excel(self, target_date=None):
+        """Export attendance data to Excel file"""
+        try:
+            db = get_db_session()
+            
+            if target_date:
+                records = db.query(Attendance).filter(Attendance.date == target_date).all()
+                filename = f"data/attendance_logs/attendance_{target_date.strftime('%d_%m_%Y')}.xlsx"
+            else:
+                records = db.query(Attendance).all()
+                filename = f"data/attendance_logs/all_attendance_{datetime.now().strftime('%d_%m_%Y')}.xlsx"
+            
+            db.close()
+            
+            if not records:
+                print("No attendance records found!")
+                return False
+            
+            # Convert to DataFrame
+            data = []
+            for record in records:
+                data.append({
+                    'ID': record.id,
+                    'Student Name': record.student_name,
+                    'Date': record.date.strftime('%d-%m-%Y'),
+                    'Time': record.time,
+                    'Status': record.status,
+                    'Created At': record.created_at.strftime('%d-%m-%Y %H:%M:%S')
+                })
+            
+            df = pd.DataFrame(data)
+            
+            # Create folder if not exists
+            os.makedirs('data/attendance_logs', exist_ok=True)
+            
+            # Save to Excel
+            df.to_excel(filename, index=False)
+            print(f"Attendance data exported to {filename}")
+            return True
+            
+        except Exception as e:
+            print(f"Error exporting to Excel: {e}")
+            return False
         
     def run_attendance_system(self):
         cap = cv2.VideoCapture(0)
