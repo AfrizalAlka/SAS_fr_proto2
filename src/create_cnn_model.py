@@ -6,6 +6,7 @@ from tensorflow.keras.optimizers import Adam # type: ignore
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pickle
+import os
 
 def create_cnn_model(input_shape, num_classes):
     model = Sequential([
@@ -31,9 +32,25 @@ def create_cnn_model(input_shape, num_classes):
     return model
 
 def train_model():
+    # Cek apakah file training data ada
+    if not os.path.exists('data/training_data/X_train.npy'):
+        print("Error: File training data tidak ditemukan!")
+        print("Silakan jalankan opsi 2 (Preprocess Data) terlebih dahulu.")
+        return None, None
+    
+    if not os.path.exists('data/training_data/y_train.npy'):
+        print("Error: File label training tidak ditemukan!")
+        print("Silakan jalankan opsi 2 (Preprocess Data) terlebih dahulu.")
+        return None, None
+    
+    # Buat folder models jika belum ada
+    os.makedirs('data/models', exist_ok=True)
+    
     # Load preprocessed data
     X = np.load('data/training_data/X_train.npy')
     y = np.load('data/training_data/y_train.npy')
+    
+    print(f"Loaded training data: {X.shape[0]} samples, {len(np.unique(y))} classes")
 
     # Split data into training and validation sets
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)

@@ -4,7 +4,7 @@ from datetime import datetime
 
 def collect_student_data(student_name, num_photos=50):
     # Create directory for the student if it doesn't exist
-    student_folder = f"data/student/{student_name}"
+    student_folder = f"data/students/{student_name}"
     if not os.path.exists(student_folder):
         os.makedirs(student_folder)
 

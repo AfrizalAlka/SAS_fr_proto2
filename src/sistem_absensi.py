@@ -7,6 +7,10 @@ from .face_detection_system import FaceRecognitionSystem
 class AttendanceSystem:
     def __init__(self):
         self.face_system = FaceRecognitionSystem()
+        
+        # Buat folder attendance_logs jika belum ada
+        os.makedirs('data/attendance_logs', exist_ok=True)
+        
         self.attendance_file = f"data/attendance_logs/attendance_{date.today().strftime('%d_%m_%Y')}.xlsx"
         self.last_recorded = {}
         self.min_interval = 30  # detik (untuk mencegah spam)
@@ -15,13 +19,19 @@ class AttendanceSystem:
         current_time = datetime.now()
         current_date = current_time.strftime('%d-%m-%Y')
 
+        # Pastikan folder attendance_logs ada
+        os.makedirs('data/attendance_logs', exist_ok=True)
+
         # Cek apakah sudah absen hari ini
         if os.path.exists(self.attendance_file):
-            df = pd.read_excel(self.attendance_file)
-            # Filter berdasarkan nama dan tanggal hari ini
-            today_attendance = df[(df['Student Name'] == student_name) & (df['Date'] == current_date)]
-            if not today_attendance.empty:
-                return False, "Already attended today"
+            try:
+                df = pd.read_excel(self.attendance_file)
+                # Filter berdasarkan nama dan tanggal hari ini
+                today_attendance = df[(df['Student Name'] == student_name) & (df['Date'] == current_date)]
+                if not today_attendance.empty:
+                    return False, "Already attended today"
+            except Exception as e:
+                print(f"Warning: Error reading attendance file: {e}")
         
         # Cek interval waktu untuk mencegah spam
         if student_name in self.last_recorded:
@@ -38,14 +48,18 @@ class AttendanceSystem:
             'Status': 'Present'
         }
 
-        if os.path.exists(self.attendance_file):
-            df = pd.read_excel(self.attendance_file)
-            df = pd.concat([df, pd.DataFrame([attendance_data])], ignore_index=True)
-        else:
-            df = pd.DataFrame([attendance_data])
+        try:
+            if os.path.exists(self.attendance_file):
+                df = pd.read_excel(self.attendance_file)
+                df = pd.concat([df, pd.DataFrame([attendance_data])], ignore_index=True)
+            else:
+                df = pd.DataFrame([attendance_data])
 
-        df.to_excel(self.attendance_file, index=False)
-        return True, "Attendance recorded successfully"
+            df.to_excel(self.attendance_file, index=False)
+            return True, "Attendance recorded successfully"
+        except Exception as e:
+            print(f"Error saving attendance: {e}")
+            return False, "Failed to save attendance"
         
     def run_attendance_system(self):
         cap = cv2.VideoCapture(0)

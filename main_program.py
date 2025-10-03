@@ -23,10 +23,16 @@ def main():
             collect_student_data(student_name, num_photos)
             
         elif choice == '2':
-            preprocess_images()
+            result = preprocess_images()
+            if result[0] is None:
+                print("Preprocessing gagal. Silakan periksa data siswa.")
+                continue
             
         elif choice == '3':
-            train_model()
+            result = train_model()
+            if result[0] is None:
+                print("Training gagal. Silakan periksa data preprocessing.")
+                continue
             
         elif choice == '4':
             if not os.path.exists('data/models/face_recognition_model.h5'):
