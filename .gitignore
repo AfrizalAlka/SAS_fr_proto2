@@ -57,10 +57,15 @@ data/students/*
 !data/students/README.md
 
 # Attendance logs (data absensi)
-data/attendance_logs/
+data/attendance_logs/*
+
+# Attendance photos (foto absensi)
+data/attendance_photos/*
+!data/attendance_photos/README.md
+data/exported_photos/*
 
 # Training data (file besar)
-data/training_data/
+data/training_data/*
 
 # Model files (file besar)
 data/models/

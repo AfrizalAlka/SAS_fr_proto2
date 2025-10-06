@@ -15,10 +15,12 @@ def main():
     print("4. Run Attendance System")
     print("5. View Today's Attendance")
     print("6. Export Attendance to Excel")
-    print("7. Exit")
+    print("7. View Attendance Photo")
+    print("8. Save Photo to File")
+    print("9. Exit")
     
     while True:
-        choice = input("\nChoose option (1-7): ")
+        choice = input("\nChoose option (1-9): ")
         
         if choice == '1':
             student_name = input("Enter student name: ")
@@ -54,7 +56,9 @@ def main():
             else:
                 print(f"\n=== Today's Attendance ({date.today().strftime('%d-%m-%Y')}) ===")
                 for record in records:
-                    print(f"ID: {record.id} | Name: {record.student_name} | Time: {record.time} | Status: {record.status}")
+                    photo_status = "📷 Yes" if record.photo_data else "❌ No"
+                    confidence = f" (Confidence: {record.confidence_score})" if record.confidence_score else ""
+                    print(f"ID: {record.id} | Name: {record.student_name} | Time: {record.time} | Status: {record.status} | Photo: {photo_status}{confidence}")
             
         elif choice == '6':
             # Export to Excel
@@ -72,11 +76,74 @@ def main():
                 print("Export failed!")
             
         elif choice == '7':
+            # View attendance photo
+            attendance_system = AttendanceSystem()
+            
+            try:
+                attendance_id = int(input("Enter attendance ID to view photo: "))
+                photo_data, filename = attendance_system.get_attendance_photo(attendance_id)
+                
+                if photo_data:
+                    print(f"Photo found: {filename}")
+                    
+                    # Convert binary data back to image and display
+                    import numpy as np
+                    import cv2
+                    
+                    # Convert binary to numpy array
+                    nparr = np.frombuffer(photo_data, np.uint8)
+                    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                    
+                    if img is not None:
+                        # Resize image for better display
+                        height, width = img.shape[:2]
+                        if width > 800:
+                            scale = 800 / width
+                            new_width = 800
+                            new_height = int(height * scale)
+                            img = cv2.resize(img, (new_width, new_height))
+                        
+                        cv2.imshow(f'Attendance Photo - ID: {attendance_id}', img)
+                        print("Press any key to close the photo...")
+                        cv2.waitKey(0)
+                        cv2.destroyAllWindows()
+                    else:
+                        print("Error: Could not decode image data.")
+                else:
+                    print("No photo found for this attendance ID.")
+                    
+            except ValueError:
+                print("Invalid attendance ID. Please enter a number.")
+            except Exception as e:
+                print(f"Error viewing photo: {e}")
+        
+        elif choice == '8':
+            # Save photo to file
+            attendance_system = AttendanceSystem()
+            
+            try:
+                attendance_id = int(input("Enter attendance ID to save photo: "))
+                output_path = input("Enter output path (press Enter for default): ").strip()
+                
+                if not output_path:
+                    output_path = None
+                
+                if attendance_system.save_photo_to_file(attendance_id, output_path):
+                    print("Photo saved successfully!")
+                else:
+                    print("Failed to save photo.")
+                    
+            except ValueError:
+                print("Invalid attendance ID. Please enter a number.")
+            except Exception as e:
+                print(f"Error saving photo: {e}")
+            
+        elif choice == '9':
             print("Goodbye!")
             break
             
         else:
-            print("Invalid choice! Please choose 1-7.")
+            print("Invalid choice! Please choose 1-9.")
 
 if __name__ == "__main__":
     main()

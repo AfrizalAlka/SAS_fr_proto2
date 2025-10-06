@@ -17,7 +17,7 @@ class AttendanceSystem:
         self.last_recorded = {}
         self.min_interval = 30  # detik (untuk mencegah spam)
 
-    def record_attendance(self, student_name):
+    def record_attendance(self, student_name, photo_frame=None, confidence=None):
         current_time = datetime.now()
         current_date = current_time.date()
         current_time_str = current_time.strftime('%H:%M:%S')
@@ -47,12 +47,35 @@ class AttendanceSystem:
                 
             self.last_recorded[student_name] = current_time
 
+            # Siapkan data foto
+            photo_data = None
+            photo_filename = None
+            
+            if photo_frame is not None:
+                # Convert frame to binary data
+                import cv2
+                import numpy as np
+                
+                # Generate filename
+                photo_filename = f"{student_name}_{current_date.strftime('%Y%m%d')}_{current_time_str.replace(':', '')}.jpg"
+                
+                # Encode frame to jpg format
+                _, buffer = cv2.imencode('.jpg', photo_frame)
+                photo_data = buffer.tobytes()
+                
+                # Optionally save to file system as backup
+                os.makedirs('data/attendance_photos', exist_ok=True)
+                cv2.imwrite(f"data/attendance_photos/{photo_filename}", photo_frame)
+
             # Simpan ke database
             new_attendance = Attendance(
                 student_name=student_name,
                 date=current_date,
                 time=current_time_str,
-                status='Present'
+                status='Present',
+                photo_data=photo_data,
+                photo_filename=photo_filename,
+                confidence_score=f"{confidence:.2f}" if confidence else None
             )
             
             db.add(new_attendance)
@@ -137,6 +160,46 @@ class AttendanceSystem:
         except Exception as e:
             print(f"Error exporting to Excel: {e}")
             return False
+    
+    def get_attendance_photo(self, attendance_id):
+        """Get photo from attendance record"""
+        try:
+            db = get_db_session()
+            
+            record = db.query(Attendance).filter(Attendance.id == attendance_id).first()
+            db.close()
+            
+            if record and record.photo_data:
+                return record.photo_data, record.photo_filename
+            else:
+                return None, None
+                
+        except Exception as e:
+            print(f"Error getting photo: {e}")
+            return None, None
+    
+    def save_photo_to_file(self, attendance_id, output_path=None):
+        """Save photo from database to file"""
+        try:
+            photo_data, filename = self.get_attendance_photo(attendance_id)
+            
+            if photo_data is None:
+                print("No photo found for this attendance record.")
+                return False
+            
+            if output_path is None:
+                os.makedirs('data/exported_photos', exist_ok=True)
+                output_path = f"data/exported_photos/{filename}"
+            
+            with open(output_path, 'wb') as f:
+                f.write(photo_data)
+            
+            print(f"Photo saved to: {output_path}")
+            return True
+            
+        except Exception as e:
+            print(f"Error saving photo to file: {e}")
+            return False
         
     def run_attendance_system(self):
         cap = cv2.VideoCapture(0)
@@ -158,8 +221,10 @@ class AttendanceSystem:
                 name, confidence = self.face_system.predict_face(face_rgb)
 
                 if name != "Unknown":
+                    # Capture the current frame for saving
+                    photo_frame = frame.copy()
 
-                    success, message = self.record_attendance(name)
+                    success, message = self.record_attendance(name, photo_frame, confidence)
 
                     if success:
                         color = (0, 255, 0)

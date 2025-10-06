@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, LargeBinary, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
@@ -19,6 +19,9 @@ class Attendance(Base):
     date = Column(Date, nullable=False)
     time = Column(String(10), nullable=False)
     status = Column(String(20), default='Present')
+    photo_data = Column(LargeBinary, nullable=True)  # Menyimpan foto dalam bentuk binary
+    photo_filename = Column(String(255), nullable=True)  # Nama file foto
+    confidence_score = Column(String(10), nullable=True)  # Skor confidence detection
     created_at = Column(DateTime, default=datetime.now)
     
     def __repr__(self):
