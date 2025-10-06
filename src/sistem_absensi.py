@@ -140,6 +140,7 @@ class AttendanceSystem:
         
     def run_attendance_system(self):
         cap = cv2.VideoCapture(0)
+        # cap = cv2.VideoCapture("http://192.168.18.187:8080/video")
 
         print("Starting attendance system. Press 'q' to quit.")
 

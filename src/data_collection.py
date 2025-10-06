@@ -10,6 +10,7 @@ def collect_student_data(student_name, num_photos=50):
 
     # Initialize webcam
     cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture("http://192.168.18.187:8080/video")
     count = 0
 
     print(f"Collecting photos for {student_name}")
